@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Todo } from "../model";
 import { PencilSquare, XSquare, CheckSquare } from "react-bootstrap-icons";
+import { Draggable } from "react-beautiful-dnd";
 
 interface Props {
   todo: Todo;
   todos: Todo[];
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
+  index: number;
 }
 
-const EachTodo: React.FC<Props> = ({ todo, todos, setTodos }) => {
+const EachTodo: React.FC<Props> = ({ todo, todos, setTodos, index }) => {
   const [edit, setEdit] = useState<boolean>(false);
   const [editTodo, setEditTodo] = useState<string>(todo.todo);
 
@@ -39,39 +41,49 @@ const EachTodo: React.FC<Props> = ({ todo, todos, setTodos }) => {
   }, [edit]);
 
   return (
-    <form className="todo-each" onSubmit={e => handleEdit(e, todo.id)}>
-      {edit ? (
-        <input
-          ref={inputRef}
-          className="todo-edit"
-          value={editTodo}
-          onChange={e => setEditTodo(e.target.value)}
-        />
-      ) : todo.isDone ? (
-        <s className="todo-each-title">{todo.todo}</s>
-      ) : (
-        <span className="todo-each-title">{todo.todo}</span>
-      )}
-
-      <div>
-        <span
-          className="icon"
-          onClick={() => {
-            if (!edit && !todo.isDone) {
-              setEdit(!edit);
-            }
-          }}
+    <Draggable draggableId={todo.id.toString()} index={index}>
+      {(provided, snapshot) => (
+        <form
+          className={`todo-each ${snapshot.isDragging ? "drag" : ""}`}
+          onSubmit={e => handleEdit(e, todo.id)}
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
         >
-          <PencilSquare />
-        </span>
-        <span className="icon" onClick={() => handleDelete(todo.id)}>
-          <XSquare />
-        </span>
-        <span className="icon" onClick={() => handleDone(todo.id)}>
-          <CheckSquare />
-        </span>
-      </div>
-    </form>
+          {edit ? (
+            <input
+              ref={inputRef}
+              className="todo-edit"
+              value={editTodo}
+              onChange={e => setEditTodo(e.target.value)}
+            />
+          ) : todo.isDone ? (
+            <s className="todo-each-title">{todo.todo}</s>
+          ) : (
+            <span className="todo-each-title">{todo.todo}</span>
+          )}
+
+          <div>
+            <span
+              className="icon"
+              onClick={() => {
+                if (!edit && !todo.isDone) {
+                  setEdit(!edit);
+                }
+              }}
+            >
+              <PencilSquare />
+            </span>
+            <span className="icon" onClick={() => handleDelete(todo.id)}>
+              <XSquare />
+            </span>
+            <span className="icon" onClick={() => handleDone(todo.id)}>
+              <CheckSquare />
+            </span>
+          </div>
+        </form>
+      )}
+    </Draggable>
   );
 };
 
